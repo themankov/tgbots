@@ -5,7 +5,7 @@ import asyncio
 from .config import API_KEY_WEATHER
 from .utils import *
 async def weather(update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
-    updateBuff=update
+
     city = context.user_data['city']
     if not city:
         await update.message.reply_text("Пожалуйста, укажите название города после команды /weather.")
@@ -24,7 +24,7 @@ async def weather(update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
             await update.callback_query.edit_message_text(f"Погода в {city}: {weather}\nТемпература: {temp}°C") 
             
         else:
-            await update.message.reply_text(f"Погода в {city}: {weather}\nТемпература: {temp}°C")
+            await update.message.edit_text(f"Погода в {city}: {weather}\nТемпература: {temp}°C")
             
         # Задержка, чтобы пользователь увидел результат
         await asyncio.sleep(5)  

@@ -2,28 +2,52 @@ from telegram import Update, InlineKeyboardButton,InlineKeyboardMarkup
 from telegram.ext import  ContextTypes
 from .utils import *
 from .menu import menu
+from .database import selectUserById,addUserToDB
 
 async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
-    name=context.user_data.get('name',None)
-    color=context.user_data.get('color',None)
-    city=context.user_data.get('city',None)
-    if bool(color) and bool(name) and bool(city):
-        await update.message.reply_text(f'Привет {name}, я помню, твой любимый цвет - {color} и ты живешь в {city}')
-        return await menu(update, context)
-    elif update.callback_query:
-            await update.callback_query.edit_message_text("Как тебя зовут?")  
-    else:
-            await update.message.reply_text('Как тебя зовут?')
-    return ASK_NAME 
-    
+    username,userId=await isUserExist(update,context)
+
+    if username is None:
+        await update.message.reply_text('Перед использованием бота вам необходимо установить username')
+        return ConversationHandler.END
+    rows=await selectUserById(userId)
+    print(rows)
+    if len(rows)==0:
+        await askingInfo(update,context,'Привет, Придумай себе пользовательское имя')
+        return ASK_NAME
+    elif username!=rows[0][1]:
+         await update.message.reply_text('Похоже раньше вы использовали другой ник в телеграмме.Удалить прошлые данные?')
+         return await confirm_delete(update,context)
+    elif len(rows)!=0 :
+         context.user_data['name']=rows[0][2]
+         context.user_data['age']=rows[0][3]
+         context.user_data['city']=rows[0][4]
+         return await menu(update,context)
+        # Возвращаем меню
+        #  if update.callback_query:
+        #     await update.callback_query.edit_message_text(
+        #         text="Выберите действие:",
+        #         reply_markup=menu_markup)
+        #  elif update.message:
+        #     await update.message.reply_text(
+        #         text="Выберите действие:",
+        #         reply_markup=menu_markup)  
+            
+            
+
 async def ask_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data['name'] = update.message.text
-    await update.message.reply_text(f"Приятно познакомиться, {context.user_data['name']}! Какой твой любимый цвет?")
-    return ASK_COLOR
-async def ask_color(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    context.user_data['color'] = update.message.text
-    await update.message.reply_text(f"Отлично! Я запомню, что твой любимый цвет — {context.user_data['color']}. Напиши мне свой город, чтобы узнать погоду")
-    return await ask_city(update,context)
+    await askingInfo(update,context,'Сколько тебе лет?')
+    return ASK_AGE
+
+async def ask_age(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
+         age = update.message.text
+         if str.isnumeric(age)==False :
+             await update.message.reply_text('Возраст должен быть целым числом.Попробуйте снова')
+             return ASK_AGE
+         context.user_data['age'] = update.message.text
+         return await ask_city(update,context)
+
 async def ask_city(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
         [InlineKeyboardButton("Москва", callback_data='Москва')],
@@ -38,4 +62,26 @@ async def processing_city(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await query.answer()
 
     context.user_data['city'] = query.data
+    await storeInfoDB(update,context)
     return await menu(update,context)   
+
+async def storeInfoDB(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
+    username,userId=await isUserExist(update,context)
+    
+    name=context.user_data['name']
+    age=context.user_data['age']
+    city=context.user_data['city']
+
+    await addUserToDB(userId,username,name,age,city)
+async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+    keyboard = [
+        [InlineKeyboardButton("Да", callback_data='delete')],
+        [InlineKeyboardButton("Нет", callback_data='cancel')],
+    ]
+    markup = InlineKeyboardMarkup(keyboard)
+    if update.callback_query:
+        await update.callback_query.edit_message_text("Вы уверены, что хотите удалить все данные?", reply_markup=markup)
+    elif update.message:
+        await update.message.edit_text("Вы уверены, что хотите удалить все данные?", reply_markup=markup)
+    return PROCESS_DELETE_CONFIRMATION2  
