@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import  ContextTypes
 import os
+import asyncio
 from .database import session
 from datetime import datetime
 from .utils import *
@@ -41,6 +42,7 @@ async def send_photo(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
                      await update.message.reply_photo(photo=photo)   
     
     await askingInfoEdit(update, context, "Все фото отправлены")
+    await asyncio.sleep(3)
     
     # Возвращаем меню
     await update.callback_query.message.reply_text(
@@ -57,6 +59,6 @@ async def save_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     photo_file = await update.message.photo[-1].get_file()
     await photo_file.download_to_drive(custom_path=photo_path)
 
-    await askingInfoEdit(update, context, "Фото сохранено")
+    await askingInfoMessage(update, context, "Фото сохранено")
     return await menu(update,context)
     

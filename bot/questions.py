@@ -14,7 +14,7 @@ async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
     print(user)
 
     if user is None:
-        await askingInfoEdit(update,context,'Привет, Придумай себе пользовательское имя')
+        await askingInfoMessage(update,context,'Привет, Придумай себе пользовательское имя')
         return ASK_NAME
     elif username!=user.username:
          await update.message.reply_text('Похоже раньше вы использовали другой ник в телеграмме.Удалить прошлые данные?')
@@ -38,7 +38,7 @@ async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
 
 async def ask_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data['name'] = update.message.text
-    await askingInfoEdit(update,context,'Сколько тебе лет?')
+    await askingInfoMessage(update,context,'Сколько тебе лет?')
     return ASK_AGE
 
 async def ask_age(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 

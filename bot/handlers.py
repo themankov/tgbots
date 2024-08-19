@@ -5,7 +5,7 @@ from .default import delete_data
 from .questions import ask_age,ask_name,processing_city, start, confirm_delete
 from .video import save_video
 from .photo import save_photo
-from .plans import set_plans
+from .plans import set_plans,mark_plan
 
 cnv_handler=ConversationHandler(
     entry_points=[CommandHandler('start',start)],
@@ -15,6 +15,7 @@ cnv_handler=ConversationHandler(
         PROCESS_CITY:[CallbackQueryHandler(processing_city)],
         PROCESS_DELETE_CONFIRMATION1:[CallbackQueryHandler(confirm_delete)],
         PROCESS_DELETE_CONFIRMATION2:[CallbackQueryHandler(delete_data)],
+        MARK_PLAN:[CallbackQueryHandler(mark_plan)],
         PROCESS_MENU:[CallbackQueryHandler(menu_choice)],
         SETTING_PLANS:[MessageHandler(filters.TEXT and ~filters.COMMAND,set_plans)],
         SAVING_PHOTO:[MessageHandler(filters.PHOTO,save_photo)],

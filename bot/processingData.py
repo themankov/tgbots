@@ -5,7 +5,7 @@ from .utils import *
 from .default import default
 from .photo import send_photo,photo
 from .video import send_video,video
-from .plans import plans,set_plans,get_finished_plans
+from .plans import plans,get_finished_plans,get_plans,delete_plan, set_plan_finished
 
 async def menu_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     
@@ -22,9 +22,15 @@ async def menu_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
         return await video(update,context)
     elif query.data =='plans':
         return await plans(update,context)
+    elif query.data.startswith('delete'):
+        return await delete_plan(update,context)
+    elif query.data.startswith('mark_done'):
+        return await set_plan_finished(update,context)
     elif query.data =='set_plans':
         await query.edit_message_text("Сформируйте свою новую цель")
         return SETTING_PLANS
+    elif query.data=='get_plans':
+        return await get_plans(update,context)
     elif query.data =='get_finished_plans':
         return await get_finished_plans(update,context)
     elif query.data == 'send_video':

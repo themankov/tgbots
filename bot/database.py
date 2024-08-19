@@ -20,7 +20,7 @@ class User(Base):
     city = Column(String, nullable=False)
 
     # Свойство plans доступно у каждого User, получение всех объектов Plan
-    plans = relationship("Plan", back_populates="user")
+    plans = relationship("Plan", back_populates="user", cascade="all, delete-orphan")
 
 class Plan(Base):
     __tablename__ = 'Plans'

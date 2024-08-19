@@ -2,7 +2,7 @@ from telegram import  InlineKeyboardButton,InlineKeyboardMarkup, Update
 import os
 import asyncio
 from telegram.ext import  ContextTypes, ConversationHandler
-ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS=range(10)
+ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS,MARK_PLAN=range(11)
 
 menu_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Узнать текущую погоду", callback_data='weather')],
@@ -21,6 +21,7 @@ photo_markup=InlineKeyboardMarkup([
             ])
 plans_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Сформировать новую цель", callback_data='set_plans')],
+                [InlineKeyboardButton("Показать список целей", callback_data='get_plans')],
                 [InlineKeyboardButton("Показать завершенные цели", callback_data='get_finished_plans')],
             ])
 def delete_all_files_in_directory(directory_path):
