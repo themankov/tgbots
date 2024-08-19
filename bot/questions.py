@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton,InlineKeyboardMarkup
 from telegram.ext import  ContextTypes
 from .utils import *
 from .menu import menu
-from .database import selectUserById,addUserToDB
+from .database import User,session
 
 async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
     username,userId=await isUserExist(update,context)
@@ -10,18 +10,19 @@ async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
     if username is None:
         await update.message.reply_text('Перед использованием бота вам необходимо установить username')
         return ConversationHandler.END
-    rows=await selectUserById(userId)
-    print(rows)
-    if len(rows)==0:
-        await askingInfo(update,context,'Привет, Придумай себе пользовательское имя')
+    user=session.query(User).filter_by(userId=userId).first()
+    print(user)
+
+    if user is None:
+        await askingInfoEdit(update,context,'Привет, Придумай себе пользовательское имя')
         return ASK_NAME
-    elif username!=rows[0][1]:
+    elif username!=user.username:
          await update.message.reply_text('Похоже раньше вы использовали другой ник в телеграмме.Удалить прошлые данные?')
          return await confirm_delete(update,context)
-    elif len(rows)!=0 :
-         context.user_data['name']=rows[0][2]
-         context.user_data['age']=rows[0][3]
-         context.user_data['city']=rows[0][4]
+    elif user :
+         context.user_data['name']=user.name
+         context.user_data['age']=user.age
+         context.user_data['city']=user.city
          return await menu(update,context)
         # Возвращаем меню
         #  if update.callback_query:
@@ -37,7 +38,7 @@ async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
 
 async def ask_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data['name'] = update.message.text
-    await askingInfo(update,context,'Сколько тебе лет?')
+    await askingInfoEdit(update,context,'Сколько тебе лет?')
     return ASK_AGE
 
 async def ask_age(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
@@ -72,7 +73,9 @@ async def storeInfoDB(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
     age=context.user_data['age']
     city=context.user_data['city']
 
-    await addUserToDB(userId,username,name,age,city)
+    new_user= User(userId=int(userId),username=username,name=name,age=int(age),city=city)
+    session.add(new_user)
+    session.commit()
 async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     keyboard = [

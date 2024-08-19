@@ -4,7 +4,7 @@ from .utils import *
 from .questions import start
 import asyncio
 from .menu import menu
-from .database import deleteUserFromDb
+
 async def default(update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
     keyboard=[
         [InlineKeyboardButton('Удалить все данные', callback_data='delete_data')] 
@@ -28,7 +28,7 @@ async def delete_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         for i in map(delete_all_files_in_directory,[directory1,directory2]):
              continue
         context.user_data.clear()
-        await deleteUserFromDb(userId)
+        # await deleteUserFromDb(userId)
         
         await query.edit_message_text("Все данные успешно удалены.")
         asyncio.sleep(4)
