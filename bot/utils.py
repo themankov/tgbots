@@ -2,7 +2,7 @@ from telegram import  InlineKeyboardButton,InlineKeyboardMarkup, Update
 import os
 import asyncio
 from telegram.ext import  ContextTypes, ConversationHandler
-ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS,MARK_PLAN=range(11)
+ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS,MARK_PLAN, ADD_WATERMARK, PROCESS_PHOTO=range(13)
 
 menu_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Узнать текущую погоду", callback_data='weather')],
@@ -13,11 +13,22 @@ menu_markup=InlineKeyboardMarkup([
             ])
 video_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Сохранить видео", callback_data='save_video')],
+                [InlineKeyboardButton("Добавить водяной знак", callback_data='add_photo_watermark')],
                 [InlineKeyboardButton("Выгрузить видео", callback_data='send_video')],
             ])
 photo_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Сохранить фото", callback_data='save_photo')],
+                [InlineKeyboardButton("Загрузить фото", callback_data='save_photo')],
                 [InlineKeyboardButton("Выгрузить фото", callback_data='send_photo')],
+            ])
+photo_edit_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Повернуть фото", callback_data='rotate_photo')],
+                [InlineKeyboardButton("Назад", callback_data='go_back')],
+
+            ])
+rotate_photo_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Повернуть по часовой стрелке", callback_data='rotate_photo_right')],
+                [InlineKeyboardButton("Повернуть против часовой стрелки", callback_data='rotate_photo_left')],
+
             ])
 plans_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Сформировать новую цель", callback_data='set_plans')],
