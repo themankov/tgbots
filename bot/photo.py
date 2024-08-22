@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import  ContextTypes
+from PIL import ImageFile
 import os
 import io
 import asyncio
@@ -11,24 +12,23 @@ from .menu import menu
 
 
 directory = os.path.join(os.path.dirname(__file__), '..', 'data', 'photo')
-async def photo(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
-    markup = photo_markup
+async def photo_menu_options(update:Update,context:ContextTypes.DEFAULT_TYPE,markup):
+        try:
+            # Если это callback_query
+            if update.callback_query:
+                await update.callback_query.edit_message_text("Выберите действие", reply_markup=markup)
+             # Если это обычное сообщение
+            elif update.message:
+                await update.message.reply_text("Выберите действие", reply_markup=markup)
+            else:
+                print("Непредвиденный тип объекта update")
+                return PROCESS_MENU
+        except AttributeError as e:
+            print(f"Ошибка при попытке открыть меню: {e}")
+            if hasattr(update, 'message') and update.message:
+                await update.message.reply_text("Произошла ошибка при открытии меню.")
+        return PROCESS_PHOTO
 
-    try:
-        # Если это callback_query
-        if update.callback_query:
-            await update.callback_query.edit_message_text("Выберите действие", reply_markup=markup)
-        # Если это обычное сообщение
-        elif update.message:
-            await update.message.reply_text("Выберите действие", reply_markup=markup)
-        else:
-            print("Непредвиденный тип объекта update")
-            return PROCESS_MENU
-    except AttributeError as e:
-        print(f"Ошибка при попытке открыть меню: {e}")
-        if hasattr(update, 'message') and update.message:
-            await update.message.reply_text("Произошла ошибка при открытии меню.")
-    return PROCESS_MENU
 
 async def send_photo(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
     if len(os.listdir(directory))==0:
@@ -39,7 +39,7 @@ async def send_photo(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
     if update.callback_query:
                     await update.callback_query.message.reply_photo(photo=photo_bytes)
     else:
-                     await update.message.reply_photo(photo=photo)  
+                     await update.message.reply_photo(photo=photo_bytes)  
     
     await askingInfoEdit(update, context, "Все фото отправлены")
     await asyncio.sleep(3)
@@ -93,47 +93,33 @@ async def edit_photo(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
             await update.message.reply_text("Произошла ошибка при открытии меню.")
     return PROCESS_PHOTO
 
-async def rotate_photo(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
+def photo_edit_decorator(func):
+    async def wrapper(update, context): 
+        query=update.callback_query
+        await query.answer()  
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"{context.user_data['name']}_{timestamp}.jpg"
+        photo_bytes = await get_photo(update, context)
+        delete_all_files_in_directory(directory)
+        image =Image.open(io.BytesIO(photo_bytes))
 
-    markup = rotate_photo_markup
+        edited_photo=await func(image)
 
-    try:
-        # Если это callback_query
-        if update.callback_query:
-            await update.callback_query.edit_message_text("Выберите действие", reply_markup=markup)
-        # Если это обычное сообщение
-        elif update.message:
-            await update.message.reply_text("Выберите действие", reply_markup=markup)
-        else:
-            print("Непредвиденный тип объекта update")
-            return PROCESS_PHOTO
-    except AttributeError as e:
-        print(f"Ошибка при попытке открыть меню: {e}")
-        if hasattr(update, 'message') and update.message:
-            await update.message.reply_text("Произошла ошибка при открытии меню.")
-    return PROCESS_PHOTO
+        # Сохраняем измененное изображение во временный файл
+        temp_file_path = os.path.join(directory, file_name)
+        edited_photo.save(temp_file_path)
 
-async def rotate_options_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
-    query=update.callback_query
-    await query.answer()  
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_name = f"{context.user_data['name']}_{timestamp}.jpg"
-    photo_bytes = await get_photo(update, context)
-    delete_all_files_in_directory(directory)
+        await askingInfoEdit(update, context, "Изменения сохранены")
+        return await edit_photo(update,context)
+    return wrapper
 
-    image =Image.open(io.BytesIO(photo_bytes))
-    rotate_image=None
-    if (query.data.endswith('left')):
-        rotate_image =  image.rotate(90)
-    elif (query.data.endswith('right')):
-        rotate_image=image.rotate(-90)
+@photo_edit_decorator
+async def rotate_photo_left(image: ImageFile) -> None: 
+  return  image.rotate(90)
+@photo_edit_decorator
+async def rotate_photo_right(image: ImageFile) -> None: 
+  return  image.rotate(-90)
 
-# Сохраняем измененное изображение во временный файл
-    temp_file_path = os.path.join(directory, file_name)
-    rotate_image.save(temp_file_path)
-
-    await askingInfoEdit(update, context, "Изменения сохранены")
-    return await edit_photo(update,context)
 
 async def get_photo(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
     photo=None
