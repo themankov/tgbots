@@ -22,6 +22,8 @@ photo_markup=InlineKeyboardMarkup([
             ])
 photo_edit_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Повернуть фото", callback_data='rotate_photo')],
+                [InlineKeyboardButton("Эффекты", callback_data='photo_effect')],
+                [InlineKeyboardButton("Поставить водяной знак", callback_data='add_watermark')],
                 [InlineKeyboardButton("Назад", callback_data='go_back')],
 
             ])
@@ -29,6 +31,17 @@ rotate_photo_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Повернуть по часовой стрелке", callback_data='rotate_photo_right')],
                 [InlineKeyboardButton("Повернуть против часовой стрелки", callback_data='rotate_photo_left')],
 
+            ])
+filter_photo_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Размытие", callback_data='photo_blur')],
+                [InlineKeyboardButton("Резкость", callback_data='photo_sharpen')],
+                [InlineKeyboardButton("Детализация", callback_data='photo_detail')],
+                [InlineKeyboardButton("Зеркальное отображение", callback_data='photo_flip')],
+                [InlineKeyboardButton("Инверсия цветов", callback_data='photo_invert')],
+                [InlineKeyboardButton("Оттенки серого", callback_data='photo_grayscale')],
+                [InlineKeyboardButton("Сепия", callback_data='photo_sepia')],
+                [InlineKeyboardButton("Наложение шума", callback_data='photo_noise')],
+                [InlineKeyboardButton("Добавленине рамки", callback_data='photo_boarder')],
             ])
 plans_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Сформировать новую цель", callback_data='set_plans')],

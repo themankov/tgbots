@@ -4,7 +4,7 @@ from .processingData import menu_choice, photo_choice
 from .default import delete_data
 from .questions import ask_age,ask_name,processing_city, start, confirm_delete
 from .video import save_video
-from .photo import save_photo, add_photo_watermark
+from .photo import save_photo, add_watermark
 from .plans import set_plans,mark_plan
 
 cnv_handler=ConversationHandler(
@@ -18,7 +18,7 @@ cnv_handler=ConversationHandler(
         MARK_PLAN:[CallbackQueryHandler(mark_plan)],
         PROCESS_MENU:[CallbackQueryHandler(menu_choice)],
         PROCESS_PHOTO:[CallbackQueryHandler(photo_choice)],
-        ADD_WATERMARK:[CallbackQueryHandler(add_photo_watermark)],
+        ADD_WATERMARK:[MessageHandler(filters.TEXT and ~filters.COMMAND,add_watermark)],
         SETTING_PLANS:[MessageHandler(filters.TEXT and ~filters.COMMAND,set_plans)],
         SAVING_PHOTO:[MessageHandler(filters.PHOTO,save_photo)],
         SAVING_VIDEO:[MessageHandler(filters.VIDEO,save_video)],

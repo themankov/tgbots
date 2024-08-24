@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import  ContextTypes
 from .utils import *
 from .default import default
-from .photo import send_photo,rotate_photo_left, rotate_photo_right,photo_menu_options
+from .photo import send_photo,rotate_photo_left, rotate_photo_right,photo_menu_options,add_watermark, photo_boarder,photo_detail,photo_grayscale,photo_flip,photo_sepia,photo_sharpen,photo_invert,photo_noise,photo_blur
 from .video import send_video,video
 from .plans import plans,get_finished_plans,get_plans,delete_plan, set_plan_finished
 
@@ -56,22 +56,26 @@ async def photo_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     elif query.data =='save_photo':
         await query.edit_message_text("Пришлите фото, которое планируете сохранить")
         return SAVING_PHOTO
-    elif query.data.startswith('mark_done'):
-        return await set_plan_finished(update,context)
-    elif query.data =='set_plans':
-        await query.edit_message_text("Сформируйте свою новую цель")
-        return SETTING_PLANS
-    elif query.data=='get_plans':
-        return await get_plans(update,context)
-    elif query.data =='get_finished_plans':
-        return await get_finished_plans(update,context)
-    elif query.data == 'send_video':
-        return await send_video(update,context)
-    elif query.data =='send_photo':
-        return await send_photo(update,context)
-    elif query.data =='save_photo':
-        await query.edit_message_text("Пришлите фото, которое планируете сохранить")
-        return SAVING_PHOTO
-    elif query.data =='save_video':
-        await query.edit_message_text("Пришлите видео, которое планируете сохранить")
-        return SAVING_VIDEO
+    elif query.data=='photo_grayscale':
+        return await photo_grayscale(update,context)
+    elif query.data =='add_watermark':
+        await query.edit_message_text("Пришлите надпись которую хотите наложить")
+        return ADD_WATERMARK
+    elif query.data=='photo_effect':
+        return await photo_menu_options(update,context,markup=filter_photo_markup)
+    elif query.data =='photo_blur':
+        return await photo_blur(update,context)
+    elif query.data == 'photo_sharpen':
+        return await photo_sharpen(update,context)
+    elif query.data =='photo_detail':
+        return await photo_detail(update,context)
+    elif query.data =='photo_flip':
+        return await photo_flip(update,context)
+    elif query.data =='photo_invert':
+        return await photo_invert(update,context)
+    elif query.data =='photo_boarder':
+        return await photo_boarder(update,context)
+    elif query.data =='photo_noise':
+        return await photo_noise(update,context)
+    elif query.data =='photo_sepia':
+        return await photo_sepia(update,context)
