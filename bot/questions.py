@@ -2,6 +2,7 @@ from telegram import Update, InlineKeyboardButton,InlineKeyboardMarkup
 from telegram.ext import  ContextTypes
 from .utils import *
 from .menu import menu
+from .video import cut
 from .database import User,session
 
 async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
@@ -88,3 +89,10 @@ async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     elif update.message:
         await update.message.edit_text("Вы уверены, что хотите удалить все данные?", reply_markup=markup)
     return PROCESS_DELETE_CONFIRMATION2  
+async def ask_video_start(update:Update,context:ContextTypes.DEFAULT_TYPE):
+     context.user_data['start']=update.message.text
+     await askingInfoMessage(update,context,'До какой секунды обрезать?')
+     return ASK_VIDEOCUT_END
+async def ask_video_end(update:Update,context:ContextTypes.DEFAULT_TYPE):
+     context.user_data['end']=update.message.text
+     return await cut(update,context)

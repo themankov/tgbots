@@ -2,6 +2,7 @@ from .weather import weather
 from telegram import Update
 from telegram.ext import  ContextTypes
 from .utils import *
+from .menu import menu
 from .default import default
 from .photo import send_photo,rotate_photo_left, rotate_photo_right,photo_menu_options,add_watermark, photo_boarder,photo_detail,photo_grayscale,photo_flip,photo_sepia,photo_sharpen,photo_invert,photo_noise,photo_blur
 from .video import send_video,video
@@ -31,11 +32,6 @@ async def menu_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
         return await get_plans(update,context)
     elif query.data =='get_finished_plans':
         return await get_finished_plans(update,context)
-    elif query.data == 'send_video':
-        return await send_video(update,context)
-    elif query.data =='save_video':
-        await query.edit_message_text("Пришлите видео, которое планируете сохранить")
-        return SAVING_VIDEO
     elif query.data =='photo':
         return await photo_menu_options(update,context,markup=photo_markup)
     
@@ -79,3 +75,23 @@ async def photo_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
         return await photo_noise(update,context)
     elif query.data =='photo_sepia':
         return await photo_sepia(update,context)
+    elif query.data =='go_back_menu':
+        return await menu(update,context)
+
+    
+async def video_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
+    
+        query=update.callback_query
+        await query.answer()
+
+        if query.data=='video_cut':
+            await query.edit_message_text("С какой секунды обрезать?")
+            return ASK_VIDEOCUT_START
+        elif query.data == 'send_video':
+            return await send_video(update,context)
+        elif query.data =='save_video':
+            await query.edit_message_text("Пришлите видео, которое планируете сохранить")
+            return SAVING_VIDEO
+        elif query.data =='go_back':
+            return await menu(update,context)
+    
