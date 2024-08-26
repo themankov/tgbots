@@ -2,7 +2,7 @@ from telegram import  InlineKeyboardButton,InlineKeyboardMarkup, Update
 import os
 import asyncio
 from telegram.ext import  ContextTypes, ConversationHandler
-ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS,MARK_PLAN, ADD_WATERMARK, PROCESS_PHOTO,ASK_VIDEOCUT_START,ASK_VIDEOCUT_END,PROCESS_VIDEO=range(16)
+ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS,MARK_PLAN, ADD_WATERMARK, PROCESS_PHOTO,ASK_VIDEOCUT_START,ASK_VIDEOCUT_END,PROCESS_VIDEO,ADD_WATERMARK_VIDEO=range(17)
 
 menu_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Узнать текущую погоду", callback_data='weather')],
@@ -15,6 +15,15 @@ video_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Сохранить видео", callback_data='save_video')],
                 [InlineKeyboardButton("Обрезать видео", callback_data='video_cut')],
                 [InlineKeyboardButton("Выгрузить видео", callback_data='send_video')],
+                [InlineKeyboardButton("Изменить скорость", callback_data='change_speed')],
+                [InlineKeyboardButton("Объединить видео", callback_data='concat_video')],
+                [InlineKeyboardButton("Работа с аудио", callback_data='video_audio')],
+                [InlineKeyboardButton("Добавить водяной знак", callback_data='add_watermark')],
+                [InlineKeyboardButton("Назад", callback_data='go_back')],
+            ])
+video_audio_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Выгрузить аудио из видео", callback_data='send_audio')],
+                [InlineKeyboardButton("Заменить аудио", callback_data='change_audio')],
                 [InlineKeyboardButton("Назад", callback_data='go_back')],
             ])
 photo_markup=InlineKeyboardMarkup([
@@ -49,6 +58,11 @@ plans_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Сформировать новую цель", callback_data='set_plans')],
                 [InlineKeyboardButton("Показать список целей", callback_data='get_plans')],
                 [InlineKeyboardButton("Показать завершенные цели", callback_data='get_finished_plans')],
+            ])
+video_speed_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Ускорить видео (x 2)", callback_data='fast_video')],
+                [InlineKeyboardButton("Замедлить видео (x 0.5)", callback_data='slow_video')],
+                [InlineKeyboardButton("Назад", callback_data='go_video_menu')],
             ])
 def delete_all_files_in_directory(directory_path):
     if os.path.exists(directory_path):

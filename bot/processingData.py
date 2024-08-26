@@ -4,8 +4,8 @@ from telegram.ext import  ContextTypes
 from .utils import *
 from .menu import menu
 from .default import default
-from .photo import send_photo,rotate_photo_left, rotate_photo_right,photo_menu_options,add_watermark, photo_boarder,photo_detail,photo_grayscale,photo_flip,photo_sepia,photo_sharpen,photo_invert,photo_noise,photo_blur
-from .video import send_video,video
+from .photo import send_photo,rotate_photo_left, rotate_photo_right,photo_menu_options, photo_boarder,photo_detail,photo_grayscale,photo_flip,photo_sepia,photo_sharpen,photo_invert,photo_noise,photo_blur
+from .video import send_video,video_edit_options,slow_video,fast_video, concat_video
 from .plans import plans,get_finished_plans,get_plans,delete_plan, set_plan_finished
 
 async def menu_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
@@ -18,7 +18,7 @@ async def menu_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     elif query.data =='default':
         return await default(update,context)
     elif query.data =='video':
-        return await video(update,context)
+        return await video_edit_options(update,context,markup=video_markup)
     elif query.data =='plans':
         return await plans(update,context)
     elif query.data.startswith('delete'):
@@ -94,4 +94,17 @@ async def video_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
             return SAVING_VIDEO
         elif query.data =='go_back':
             return await menu(update,context)
+        elif query.data =='change_speed':
+            return await video_edit_options(update,context,markup=video_speed_markup)
+        elif query.data =='slow_video':
+            return await slow_video(update,context)
+        elif query.data =='fast_video':
+            return await fast_video(update,context)
+        elif query.data =='go_video_menu':
+            return await video_edit_options(update,context,markup=video_markup)
+        elif query.data =='add_watermark':
+            await query.edit_message_text("Пришлите надпись которую хотите наложить")
+            return ADD_WATERMARK_VIDEO
+        elif query.data =='concat_video':
+            return await concat_video(update,)
     
