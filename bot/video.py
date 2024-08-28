@@ -5,11 +5,12 @@ from datetime import datetime
 from .utils import *
 from .menu import menu
 from moviepy.video.fx.all import resize
-from moviepy.editor import VideoFileClip,TextClip,CompositeVideoClip, concatenate_videoclips,vfx
+from moviepy.editor import VideoFileClip,TextClip,CompositeVideoClip, concatenate_videoclips,AudioFileClip
 from moviepy.config import change_settings
 
 change_settings({"IMAGEMAGICK_BINARY": "C:\Program Files\ImageMagick-7.1.1-Q16\magick.exe"})
 directory = os.path.join(os.path.dirname(__file__), '..', 'data', 'video')
+directory_audio = os.path.join(os.path.dirname(__file__), '..', 'data', 'audio')
 
 async def video_edit_options(update:Update,context:ContextTypes.DEFAULT_TYPE,markup)->None:
     if update.callback_query:
@@ -181,3 +182,60 @@ async def concat_video(update:Update,context):
         return await video_edit_options(update, context, markup=video_markup)
     await askingInfoMessage(update,context,'Загрузили одно видео...')
     
+@video_edit_decorator
+async def volume_down(update,context):
+         clip=await get_video()
+         return clip.volumex(.5)
+
+@video_edit_decorator
+async def volume_up(update,context):
+         clip=await get_video()
+         return clip.volumex(2)
+    
+async def send_audio(update:Update,context):
+       # Получение видеофайла
+    clip = await get_video()
+    audio = clip.audio
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"{context.user_data['name']}_{timestamp}.mp3"
+    audio_path = os.path.join(directory_audio, file_name)
+
+    # Сохранение аудиофайла на диск
+    audio.write_audiofile(audio_path)
+
+    # Отправка аудиофайла через Telegram
+    with open(audio_path, 'rb') as audio_file:
+        if update.callback_query:
+            await update.callback_query.message.reply_audio(audio=audio_file)
+        else:
+            await update.message.reply_audio(audio=audio_file)
+
+    # Закрытие аудиоклипа и видеоклипа
+    audio.close()
+    clip.close()
+
+    # Удаление временных файлов
+    delete_all_files_in_directory(directory_audio)
+    delete_all_files_in_directory(directory)
+    return await video_edit_options(update,context,markup=video_markup)
+
+async def change_audio(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"{context.user_data['name']}_{timestamp}.mp4"
+    audio_path = os.path.join(directory_audio, file_name)
+    video_path = os.path.join(directory, file_name)
+
+    audio_file = await update.message.audio.get_file()
+    await audio_file.download_to_drive(custom_path=audio_path)
+
+    clip=await get_video()
+    new_audio=AudioFileClip(audio_path)
+    new_clip=clip.set_audio(new_audio)
+    new_clip.write_videofile(video_path)
+
+    new_clip.close()  
+    new_audio.close()
+
+    delete_all_files_in_directory(directory_audio)
+    await askingInfoMessage(update,context,"Аудио успешно изменено")
+    return await video_edit_options(update,context, markup=video_markup)

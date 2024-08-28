@@ -2,7 +2,7 @@ from telegram import  InlineKeyboardButton,InlineKeyboardMarkup, Update
 import os
 import asyncio
 from telegram.ext import  ContextTypes, ConversationHandler
-ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS,MARK_PLAN, ADD_WATERMARK, PROCESS_PHOTO,ASK_VIDEOCUT_START,ASK_VIDEOCUT_END,PROCESS_VIDEO,ADD_WATERMARK_VIDEO, CONCAT_VIDEO=range(18)
+ASK_NAME,ASK_AGE,ASK_CITY, PROCESS_CITY,SAVING_PHOTO,SAVING_VIDEO,PROCESS_DELETE_CONFIRMATION1,PROCESS_DELETE_CONFIRMATION2,PROCESS_MENU, SETTING_PLANS,MARK_PLAN, ADD_WATERMARK, PROCESS_PHOTO,ASK_VIDEOCUT_START,ASK_VIDEOCUT_END,PROCESS_VIDEO,ADD_WATERMARK_VIDEO, CONCAT_VIDEO, SET_AUDIO=range(19)
 
 menu_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Узнать текущую погоду", callback_data='weather')],
@@ -24,7 +24,9 @@ video_markup=InlineKeyboardMarkup([
 video_audio_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Выгрузить аудио из видео", callback_data='send_audio')],
                 [InlineKeyboardButton("Заменить аудио", callback_data='change_audio')],
-                [InlineKeyboardButton("Назад", callback_data='go_back')],
+                [InlineKeyboardButton("Увеличить громкость", callback_data='volume_up')],
+                [InlineKeyboardButton("Уменьшить громкость", callback_data='volume_down')],
+                [InlineKeyboardButton("Назад", callback_data='go_video_back')],
             ])
 photo_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("Загрузить фото", callback_data='save_photo')],
@@ -68,7 +70,7 @@ def delete_all_files_in_directory(directory_path):
     if os.path.exists(directory_path):
         for file_name in os.listdir(directory_path):
             file_path = os.path.join(directory_path, file_name)
-            if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif','.mp4')):
+            if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif','.mp4','.mp3')):
                 os.remove(file_path)
     else:
         print(f"Папка {directory_path} не найдена.")

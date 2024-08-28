@@ -5,7 +5,7 @@ from .utils import *
 from .menu import menu
 from .default import default
 from .photo import send_photo,rotate_photo_left, rotate_photo_right,photo_menu_options, photo_boarder,photo_detail,photo_grayscale,photo_flip,photo_sepia,photo_sharpen,photo_invert,photo_noise,photo_blur
-from .video import send_video,video_edit_options,slow_video,fast_video, concat_video
+from .video import send_video,video_edit_options,slow_video,fast_video, volume_down,volume_up,send_audio,change_audio
 from .plans import plans,get_finished_plans,get_plans,delete_plan, set_plan_finished
 
 async def menu_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
@@ -108,4 +108,17 @@ async def video_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
         elif query.data =='concat_video':
             await query.edit_message_text("Пришлите видео, которые хотите объединить")
             return CONCAT_VIDEO
+        elif query.data =='send_audio':
+            return await send_audio(update,context)
+        elif query.data =='change_audio':
+            await query.edit_message_text("Пришлите аудио, которым хотите заменить ауди в видео")
+            return SET_AUDIO
+        elif query.data =='video_audio':
+            return await video_edit_options(update,context,markup=video_audio_markup)
+        elif query.data =='volume_up':
+            return await volume_up(update,context)
+        elif query.data =='volume_down':
+            return await volume_down(update,context)
+        elif query.data =='go_video_back':
+            return await video_edit_options(update,context,markup=video_markup)
     
