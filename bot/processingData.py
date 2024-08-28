@@ -106,5 +106,6 @@ async def video_choice(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
             await query.edit_message_text("Пришлите надпись которую хотите наложить")
             return ADD_WATERMARK_VIDEO
         elif query.data =='concat_video':
-            return await concat_video(update,)
+            await query.edit_message_text("Пришлите видео, которые хотите объединить")
+            return CONCAT_VIDEO
     

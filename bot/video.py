@@ -4,7 +4,8 @@ import os
 from datetime import datetime
 from .utils import *
 from .menu import menu
-from moviepy.editor import VideoFileClip,TextClip,CompositeVideoClip
+from moviepy.video.fx.all import resize
+from moviepy.editor import VideoFileClip,TextClip,CompositeVideoClip, concatenate_videoclips,vfx
 from moviepy.config import change_settings
 
 change_settings({"IMAGEMAGICK_BINARY": "C:\Program Files\ImageMagick-7.1.1-Q16\magick.exe"})
@@ -136,3 +137,47 @@ async def add_watermark(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
             text_clips.append(text_clip.set_pos((i, j)))
 
     return CompositeVideoClip([clip] + text_clips)
+# Словарь для временного хранения видео из медиа-группы
+media_group_storage = {}    
+async def concat_video(update:Update,context):
+    media_group_id = update.message.media_group_id
+
+    # Если это новое медиа-групповое сообщение, создаем список для хранения видео
+    if media_group_id not in media_group_storage:
+        media_group_storage[media_group_id] = []
+
+    # Получаем файл видео и добавляем в список
+    video_file = await update.message.video.get_file()
+    media_group_storage[media_group_id].append(video_file.file_path)
+
+    # Установим небольшую задержку, чтобы дождаться получения всех частей медиа-группы
+    await asyncio.sleep(1)
+
+    # Проверим, получены ли все части медиа-группы (ожидается 2 видео)
+    if len(media_group_storage[media_group_id]) == 2:  # измените число на ожидаемое количество видео
+        await askingInfoMessage(update,context,'Загрузили второе видео...')
+        video_files = media_group_storage.pop(media_group_id)
+
+        # Обрабатываем видеофайлы
+        clips = []
+        for i,file_path in enumerate(video_files):
+           
+            clip = VideoFileClip(file_path)
+            path=os.path.join(directory, f"clip_{i}.mp4")
+            clip.write_videofile(path, codec="libx264", audio_codec="aac", preset="slow", fps=30)
+            clips.append(clip)
+        final_clips=[]
+        for i in range(len(clips)):
+             path=os.path.join(directory, f"clip_{i}.mp4")
+             final_clips.append(VideoFileClip(path))
+        final_video = concatenate_videoclips(final_clips,method="compose")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"{context.user_data['name']}_{timestamp}.mp4"
+        video_path = os.path.join(directory, file_name)
+        final_video.write_videofile(video_path)
+        final_video.close()
+
+        await update.message.reply_text("Ваше видео готово!")
+        return await video_edit_options(update, context, markup=video_markup)
+    await askingInfoMessage(update,context,'Загрузили одно видео...')
+    
