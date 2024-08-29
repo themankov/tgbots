@@ -6,7 +6,6 @@ import io
 import numpy as np
 import asyncio
 from PIL import Image
-from .database import session
 from datetime import datetime
 from .utils import *
 from .menu import menu

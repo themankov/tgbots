@@ -1,13 +1,19 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, BigInteger,Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger,Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 # Создание базы данных и подключение к ней
-DATABASE_URL = 'postgresql://postgres:123456@localhost:5432/tgbot'
-engine = create_engine(DATABASE_URL)
+# DATABASE_URL = 'postgresql://postgres:123456@localhost:5432/tgbot'
+DATABASE_URL = 'postgresql+asyncpg://postgres:qwerty@localhost:5432/tgbots'
+engine = create_async_engine(DATABASE_URL, echo=True)
+# Создание базового класса
 Base = declarative_base()
-Session = sessionmaker(bind=engine)
-session = Session()
+# Создание асинхронной сессии
+async_session = sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
+
 
 
 class User(Base):
@@ -34,10 +40,10 @@ class Plan(Base):
     # Связь с таблицей User
     user = relationship("User", back_populates="plans")
 
-
-Base.metadata.create_all(engine)
-
-
+# Асинхронное создание всех таблиц
+async def create_tables():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 # import sqlite3

@@ -3,7 +3,7 @@ from telegram.ext import  ContextTypes
 from .utils import *
 from .questions import start
 import asyncio
-from .database import session, User
+from .database import async_session, User
 from .menu import menu
 
 async def default(update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
@@ -29,10 +29,11 @@ async def delete_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         for i in map(delete_all_files_in_directory,[directory1,directory2]):
              continue
         context.user_data.clear()
-        session.query(User).delete(synchronize_session='fetch')
-
-        await query.edit_message_text("Все данные успешно удалены.")
-        asyncio.sleep(4)
+        async with async_session() as session:
+             
+            await session.query(User).delete(synchronize_session='fetch')
+            await query.edit_message_text("Все данные успешно удалены.")
+        
     elif query.data=='cancel':   
          await query.edit_message_text("Удаление отменено.")
     return await start(update,context)

@@ -3,28 +3,29 @@ from telegram.ext import  ContextTypes
 from .utils import *
 from .menu import menu
 from .video import cut
-from .database import User,session
+from sqlalchemy.future import select
+from .database import User,async_session
 
 async def start (update:Update,context:ContextTypes.DEFAULT_TYPE)->int:
     username,userId=await isUserExist(update,context)
-
+    user=None
     if username is None:
         await update.message.reply_text('Перед использованием бота вам необходимо установить username')
         return ConversationHandler.END
-    user=session.query(User).filter_by(userId=userId).first()
-    print(user)
-
-    if user is None:
-        await askingInfoMessage(update,context,'Привет, Придумай себе пользовательское имя')
-        return ASK_NAME
-    elif username!=user.username:
-         await update.message.reply_text('Похоже раньше вы использовали другой ник в телеграмме.Удалить прошлые данные?')
-         return await confirm_delete(update,context)
-    elif user :
-         context.user_data['name']=user.name
-         context.user_data['age']=user.age
-         context.user_data['city']=user.city
-         return await menu(update,context)
+    async with async_session() as session:
+        user= await session.execute(select(User).filter_by(userId=userId))
+        user=user.scalars().first()
+        if user is None:
+            await askingInfoMessage(update,context,'Привет, Придумай себе пользовательское имя')
+            return ASK_NAME
+        elif username!=user.username:
+            await update.message.reply_text('Похоже раньше вы использовали другой ник в телеграмме.Удалить прошлые данные?')
+            return await confirm_delete(update,context)
+        elif user :
+            context.user_data['name']=user.name
+            context.user_data['age']=user.age
+            context.user_data['city']=user.city
+            return await menu(update,context)
         # Возвращаем меню
         #  if update.callback_query:
         #     await update.callback_query.edit_message_text(
@@ -73,10 +74,11 @@ async def storeInfoDB(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
     name=context.user_data['name']
     age=context.user_data['age']
     city=context.user_data['city']
-
-    new_user= User(userId=int(userId),username=username,name=name,age=int(age),city=city)
-    session.add(new_user)
-    session.commit()
+    async with async_session() as session:
+     async with session.begin(): 
+        new_user= User(userId=int(userId),username=username,name=name,age=int(age),city=city)
+        await session.add(new_user)
+        await session.commit()
 async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     keyboard = [

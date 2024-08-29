@@ -1,8 +1,8 @@
 from telegram import Update
 from telegram.ext import  ContextTypes
-import os
+from sqlalchemy.future import select
 import asyncio
-from .database import Plan,session
+from .database import Plan,async_session
 from datetime import datetime
 from .utils import *
 from .menu import menu
@@ -29,43 +29,48 @@ async def plans(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
 async def set_plans(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     text = update.message.text
     username,userId=await isUserExist(update,context)
-    new_plan = Plan(date=datetime.now().strftime("%Y%m%d"), content=text, finished=False, userId=int(userId))
-    session.add(new_plan)
-    session.commit()
-    await askingInfoMessage(update,context,'Ваша цель успешно сформирована. Удачи!')
+    async with async_session() as session:
+        new_plan = Plan(date=datetime.now().strftime("%Y%m%d"), content=text, finished=False, userId=int(userId))
+        session.add(new_plan)
+        await session.commit()
+        await askingInfoMessage(update,context,'Ваша цель успешно сформирована. Удачи!')
     return await menu(update,context)
 async def get_finished_plans(update:Update, context:ContextTypes.DEFAULT_TYPE)->None:
     username,userId=await isUserExist(update,context)
-    finishedPlans=session.query(Plan).filter(Plan.userId==userId).filter(Plan.finished==True).all()
-    if len(finishedPlans)==0:
-         await askingInfoMessage(update,context,'Завершенных целей не найдено') 
-    await askingInfoEdit(update,context,"Ваши завершенные цели:")
-    for i in range(len(finishedPlans)):
-        await askingInfoMessage(update,context,"✅ "+finishedPlans[i].content)  
-    await update.callback_query.message.reply_text(
+    async with async_session() as session:
+        finishedPlans=await session.execute(select(Plan).filter(Plan.userId==userId).filter(Plan.finished==True))
+        finishedPlans=finishedPlans.scalars().all()
+        if len(finishedPlans)==0:
+            await askingInfoMessage(update,context,'Завершенных целей не найдено') 
+        await askingInfoEdit(update,context,"Ваши завершенные цели:")
+        for i in range(len(finishedPlans)):
+            await askingInfoMessage(update,context,"✅ "+finishedPlans[i].content)  
+        await update.callback_query.message.reply_text(
             text="Выберите действие:",
             reply_markup=menu_markup
         )                
 
 async def get_plans(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     username,userId=await isUserExist(update,context)
-    plans=session.query(Plan).filter(Plan.userId==userId).filter(Plan.finished==False).all()
-    if len(plans)==0:
-        await askingInfoEdit(update,context,"Цели не заданы")
-        await asyncio.sleep(4)
-        return await menu(update,context)
-    # Создание клавиатуры с кнопками для каждого плана
-    keyboard = []
-    for plan in plans:
-        keyboard.append([InlineKeyboardButton(plan.content, callback_data=f"plan_{plan.id}")])
+    async with async_session()  as session:
+        plans= await session.execute(select(Plan).filter(Plan.userId==userId).filter(Plan.finished==False))
+        plans=plans.scalars().all()
+        if len(plans)==0:
+            await askingInfoEdit(update,context,"Цели не заданы")
+            await asyncio.sleep(4)
+            return await menu(update,context)
+        # Создание клавиатуры с кнопками для каждого плана
+        keyboard = []
+        for plan in plans:
+            keyboard.append([InlineKeyboardButton(plan.content, callback_data=f"plan_{plan.id}")])
     
-    reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
     
-    if update.callback_query:
-        await update.callback_query.edit_message_text("Ваши планы:", reply_markup=reply_markup)
-    elif update.message:
-        await update.message.edit_text("Ваши планы:", reply_markup=reply_markup)   
-    return MARK_PLAN  
+        if update.callback_query:
+            await update.callback_query.edit_message_text("Ваши планы:", reply_markup=reply_markup)
+        elif update.message:
+            await update.message.edit_text("Ваши планы:", reply_markup=reply_markup)   
+        return MARK_PLAN  
 
 async def mark_plan(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     query = update.callback_query
@@ -91,9 +96,10 @@ async def delete_plan(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     
     plan_id = query.data.split("_")[1]
     plan_id = int(plan_id)
-    session.query(Plan).filter(Plan.id==plan_id).delete(synchronize_session='fetch')
-    session.commit()
-    return await plans(update,context)
+    async with async_session() as session:
+        await session.execute(select(Plan).filter(Plan.id==plan_id)).delete(synchronize_session='fetch')
+        await session.commit()
+        return await plans(update,context)
 
 async def set_plan_finished(update:Update,context:ContextTypes.DEFAULT_TYPE)->None:
     query = update.callback_query
@@ -101,6 +107,7 @@ async def set_plan_finished(update:Update,context:ContextTypes.DEFAULT_TYPE)->No
     
     plan_id = query.data.split("_")[2]
     plan_id = int(plan_id)
-    session.query(Plan).filter(Plan.id==plan_id).update({"finished":True})
-    session.commit()
-    return await get_plans(update,context)
+    async with async_session() as session:
+        await session.execute(select(Plan).filter(Plan.id==plan_id)).update({"finished":True})
+        await session.commit()
+        return await get_plans(update,context)
